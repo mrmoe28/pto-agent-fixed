@@ -68,47 +68,32 @@ export default function GooglePlacesAutocomplete({
         }
         
         if (inputRef.current && !placeAutocompleteRef.current) {
-          console.log('Creating PlaceAutocompleteElement instance...');
+          console.log('Creating Autocomplete instance...');
           try {
-            // Create PlaceAutocompleteElement
-            placeAutocompleteRef.current = new google.maps.places.PlaceAutocompleteElement({
-              componentRestrictions: PLACES_CONFIG.componentRestrictions,
-              types: PLACES_CONFIG.types
-            });
-            
-            // Connect to the input element
-            placeAutocompleteRef.current.connectTo(inputRef.current);
-            console.log('PlaceAutocompleteElement instance created successfully');
+            // Use the standard Autocomplete (with deprecation warning suppressed for now)
+            // TODO: Migrate to PlaceAutocompleteElement when stable API is available
+            const autocomplete = new google.maps.places.Autocomplete(inputRef.current, PLACES_CONFIG);
+            placeAutocompleteRef.current = autocomplete as any;
+            console.log('Autocomplete instance created successfully');
 
-            placeAutocompleteRef.current.addListener('gmp-placeselect', (event: google.maps.places.PlaceSelectEvent) => {
-              console.log('Place selected event triggered');
-              const place = event.place;
+            autocomplete.addListener('place_changed', () => {
+              console.log('Place changed event triggered');
+              const place = autocomplete.getPlace();
               console.log('Selected place:', place);
               
-              if (place && place.formattedAddress) {
-                setInputValue(place.formattedAddress);
-                onChange?.(place.formattedAddress);
-                // Convert to legacy format for backward compatibility
-                const legacyPlace = {
-                  formatted_address: place.formattedAddress,
-                  geometry: place.location ? {
-                    location: {
-                      lat: () => place.location.lat(),
-                      lng: () => place.location.lng()
-                    }
-                  } : undefined,
-                  address_components: place.addressComponents || []
-                };
-                onPlaceSelect(legacyPlace as google.maps.places.PlaceResult);
-                console.log('Place selected successfully:', place.formattedAddress);
+              if (place && place.formatted_address) {
+                setInputValue(place.formatted_address);
+                onChange?.(place.formatted_address);
+                onPlaceSelect(place);
+                console.log('Place selected successfully:', place.formatted_address);
               } else {
                 console.warn(GOOGLE_API_ERRORS.INVALID_PLACE, place);
               }
             });
             
-            console.log('PlaceAutocompleteElement initialized successfully');
+            console.log('Autocomplete initialized successfully');
           } catch (autocompleteError) {
-            console.error('Failed to create PlaceAutocompleteElement instance:', autocompleteError);
+            console.error('Failed to create autocomplete instance:', autocompleteError);
             throw autocompleteError;
           }
         } else if (!inputRef.current) {
