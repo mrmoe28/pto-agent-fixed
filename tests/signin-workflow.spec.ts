@@ -17,8 +17,9 @@ test.describe('Sign-in Workflow', () => {
     // Check description text
     await expect(page.getByText("Sign in to access Georgia's permit office directory")).toBeVisible();
     
-    // Check Clerk sign-in component is present
-    await expect(page.locator('[data-clerk-component="sign-in"]')).toBeVisible();
+    // Check sign-in form is present
+    await expect(page.getByRole('textbox', { name: /email/i })).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
     
     // Check navigation links
     await expect(page.getByRole('link', { name: 'Sign up here' })).toBeVisible();
@@ -26,9 +27,6 @@ test.describe('Sign-in Workflow', () => {
   });
 
   test('should have proper form elements for sign-in', async ({ page }) => {
-    // Wait for Clerk component to load
-    await page.waitForSelector('[data-clerk-component="sign-in"]');
-    
     // Check for email input field
     await expect(page.locator('input[type="email"]')).toBeVisible();
     
@@ -40,20 +38,18 @@ test.describe('Sign-in Workflow', () => {
   });
 
   test('should show validation errors for empty form submission', async ({ page }) => {
-    // Wait for Clerk component to load
-    await page.waitForSelector('[data-clerk-component="sign-in"]');
-    
     // Try to submit empty form
     await page.getByRole('button', { name: /sign in/i }).click();
     
-    // Check for validation errors
-    await expect(page.locator('[data-clerk-component="sign-in"]')).toContainText(/required/i);
+    // Check for HTML5 validation on required fields
+    const emailInput = page.locator('input[type="email"]');
+    await expect(emailInput).toHaveAttribute('required');
+    
+    const passwordInput = page.locator('input[type="password"]');
+    await expect(passwordInput).toHaveAttribute('required');
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
-    // Wait for Clerk component to load
-    await page.waitForSelector('[data-clerk-component="sign-in"]');
-    
     // Fill in invalid credentials
     await page.locator('input[type="email"]').fill('invalid@example.com');
     await page.locator('input[type="password"]').fill('wrongpassword');
@@ -61,8 +57,8 @@ test.describe('Sign-in Workflow', () => {
     // Submit form
     await page.getByRole('button', { name: /sign in/i }).click();
     
-    // Check for error message
-    await expect(page.locator('[data-clerk-component="sign-in"]')).toContainText(/invalid/i);
+    // Check for error message (NextAuth error handling)
+    await expect(page.locator('text=Invalid email or password')).toBeVisible({ timeout: 5000 });
   });
 
   test('should navigate to sign-up page when clicking sign-up link', async ({ page }) => {
@@ -80,6 +76,7 @@ test.describe('Sign-in Workflow', () => {
     
     // Verify navigation to forgot password page
     await expect(page).toHaveURL(/forgot-password/);
+    await expect(page.getByRole('heading', { name: /forgot password/i })).toBeVisible();
   });
 
   test('should have proper styling and responsive design', async ({ page }) => {
@@ -111,9 +108,6 @@ test.describe('Sign-in Workflow', () => {
   });
 
   test('should handle keyboard navigation properly', async ({ page }) => {
-    // Wait for Clerk component to load
-    await page.waitForSelector('[data-clerk-component="sign-in"]');
-    
     // Test tab navigation
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
@@ -123,42 +117,41 @@ test.describe('Sign-in Workflow', () => {
     await expect(focusedElement).toBeVisible();
   });
 
-  test('should redirect to dashboard after successful sign-in', async ({ page }) => {
-    // This test would require valid test credentials
-    // For now, we'll just verify the redirect URL is set correctly
-    const signInComponent = page.locator('[data-clerk-component="sign-in"]');
-    await expect(signInComponent).toBeVisible();
+  test('should handle form submission with loading state', async ({ page }) => {
+    // Fill in credentials
+    await page.locator('input[type="email"]').fill('test@example.com');
+    await page.locator('input[type="password"]').fill('testpassword');
     
-    // Check that the component has the correct redirect URL
-    // This is handled by Clerk's configuration in the component
+    // Submit form
+    await page.getByRole('button', { name: /sign in/i }).click();
+    
+    // Check for loading state
+    await expect(page.getByRole('button', { name: /signing in/i })).toBeVisible({ timeout: 1000 });
   });
 });
 
-test.describe('Sign-in Integration Tests', () => {
-  test('should work with Clerk authentication flow', async ({ page }) => {
+test.describe('NextAuth.js Integration Tests', () => {
+  test('should load NextAuth.js sign-in page correctly', async ({ page }) => {
     await page.goto('/sign-in');
     
-    // Wait for Clerk to initialize
-    await page.waitForSelector('[data-clerk-component="sign-in"]');
+    // Verify the custom sign-in form is displayed
+    await expect(page.locator('form')).toBeVisible();
     
-    // Verify Clerk is properly loaded
-    const clerkComponent = page.locator('[data-clerk-component="sign-in"]');
-    await expect(clerkComponent).toBeVisible();
+    // Check that form elements are properly rendered
+    const emailInput = page.locator('input[type="email"]');
+    const passwordInput = page.locator('input[type="password"]');
+    const submitButton = page.getByRole('button', { name: /sign in/i });
     
-    // Check that Clerk's JavaScript is loaded
-    const clerkScript = page.locator('script[src*="clerk"]');
-    await expect(clerkScript).toBeAttached();
+    await expect(emailInput).toBeVisible();
+    await expect(passwordInput).toBeVisible();
+    await expect(submitButton).toBeVisible();
   });
 
-  test('should handle Clerk environment variables correctly', async ({ page }) => {
-    await page.goto('/sign-in');
+  test('should handle NextAuth.js error states', async ({ page }) => {
+    // Navigate to sign-in with error parameter
+    await page.goto('/sign-in?error=CredentialsSignin');
     
-    // Check that Clerk publishable key is available
-    const clerkKey = await page.evaluate(() => {
-      return (window as any).__clerk_publishable_key;
-    });
-    
-    // The key should be present (even if it's a test key)
-    expect(clerkKey).toBeTruthy();
+    // Check if error message is displayed
+    await expect(page.locator('text=Invalid email or password')).toBeVisible();
   });
 });

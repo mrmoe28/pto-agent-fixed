@@ -7,8 +7,8 @@ export const test = base.extend({
     // Navigate to sign-in page
     await page.goto('/sign-in');
     
-    // Wait for Clerk to load
-    await page.waitForSelector('[data-clerk-component="sign-in"]', { timeout: 10000 });
+    // Wait for sign-in form to load
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
     
     // Sign in with test credentials
     await page.locator('input[type="email"]').fill('test@example.com');
@@ -18,9 +18,19 @@ export const test = base.extend({
     // Wait for redirect to dashboard
     await page.waitForURL('/dashboard', { timeout: 10000 });
     
-    // Use the authenticated page
     await use(page);
   },
+  
+  // Custom fixture for creating test data
+  testData: async ({}, use) => {
+    const testUserData = {
+      email: 'test@example.com',
+      password: 'TestPassword123!',
+      name: 'Test User'
+    };
+    
+    await use(testUserData);
+  }
 });
 
 export { expect } from '@playwright/test';

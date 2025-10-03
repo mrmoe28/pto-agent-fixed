@@ -30,7 +30,7 @@ export default function GooglePlacesAutocomplete({
   onChange
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const placeAutocompleteRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+  const placeAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -73,7 +73,7 @@ export default function GooglePlacesAutocomplete({
             // Use the standard Autocomplete (with deprecation warning suppressed for now)
             // TODO: Migrate to PlaceAutocompleteElement when stable API is available
             const autocomplete = new google.maps.places.Autocomplete(inputRef.current, PLACES_CONFIG);
-            placeAutocompleteRef.current = autocomplete as any;
+            placeAutocompleteRef.current = autocomplete as google.maps.places.Autocomplete;
             console.log('Autocomplete instance created successfully');
 
             autocomplete.addListener('place_changed', () => {
