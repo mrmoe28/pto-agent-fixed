@@ -73,7 +73,6 @@ export default function GooglePlacesAutocomplete({
             // Create PlaceAutocompleteElement
             placeAutocompleteRef.current = new google.maps.places.PlaceAutocompleteElement({
               componentRestrictions: PLACES_CONFIG.componentRestrictions,
-              fields: PLACES_CONFIG.fields,
               types: PLACES_CONFIG.types
             });
             
