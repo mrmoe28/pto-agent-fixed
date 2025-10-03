@@ -81,7 +81,7 @@ export default function GooglePlacesAutocomplete({
             placeAutocompleteRef.current.connectTo(inputRef.current);
             console.log('PlaceAutocompleteElement instance created successfully');
 
-            placeAutocompleteRef.current.addListener('gmp-placeselect', (event: any) => {
+            placeAutocompleteRef.current.addListener('gmp-placeselect', (event: google.maps.places.PlaceSelectEvent) => {
               console.log('Place selected event triggered');
               const place = event.place;
               console.log('Selected place:', place);
