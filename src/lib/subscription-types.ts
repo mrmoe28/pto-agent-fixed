@@ -18,10 +18,10 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   },
   pro: {
     searchesLimit: 40,
-    canSaveFavorites: false,
-    canExportResults: false,
+    canSaveFavorites: true,
+    canExportResults: true,
     hasTeamCollaboration: false,
-    hasPrioritySupport: false,
+    hasPrioritySupport: true,
   },
   enterprise: {
     searchesLimit: null, // unlimited

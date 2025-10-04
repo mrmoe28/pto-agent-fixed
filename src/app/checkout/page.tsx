@@ -39,14 +39,11 @@ const plans: Record<string, Plan> = {
     icon: <Zap className="h-8 w-8" />,
     color: 'from-blue-500 to-blue-600',
     features: [
-      'Unlimited permit office searches',
+      '40 searches per month',
       'Advanced filtering and sorting',
-      'Save favorite offices',
       'Distance-based search results',
       'Detailed office information',
-      'Phone and email support',
-      'Export search results',
-      'Priority customer support'
+      'Phone and email support'
     ]
   },
   enterprise: {
@@ -58,15 +55,14 @@ const plans: Record<string, Plan> = {
     icon: <Crown className="h-8 w-8" />,
     color: 'from-purple-500 to-purple-600',
     features: [
+      'Unlimited searches',
       'Everything in Pro',
       'Team collaboration features',
-      'Custom branding options',
       'API access for integrations',
       'Advanced analytics dashboard',
       'Dedicated account manager',
-      'Custom training sessions',
-      'SLA guarantee',
-      'White-label solutions'
+      'Priority customer support',
+      'SLA guarantee'
     ]
   }
 };

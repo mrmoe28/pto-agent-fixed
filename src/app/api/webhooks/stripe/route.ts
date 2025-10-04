@@ -121,20 +121,42 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log('👤 Found user:', { userId: user.id, email: customerEmail });
 
-  // Update database
+  // Update or insert subscription record
   const searchesLimit = plan === 'pro' ? 40 : null; // enterprise has unlimited
 
-  await db
-    .update(userSubscriptions)
-    .set({
-      plan,
-      searchesLimit,
-      status: 'active',
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      updatedAt: new Date(),
-    })
-    .where(eq(userSubscriptions.userId, user.id));
+  // Try to update existing subscription
+  const existingSubscription = await db.query.userSubscriptions.findFirst({
+    where: eq(userSubscriptions.userId, user.id),
+  });
+
+  if (existingSubscription) {
+    await db
+      .update(userSubscriptions)
+      .set({
+        plan,
+        searchesLimit,
+        status: 'active',
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        updatedAt: new Date(),
+      })
+      .where(eq(userSubscriptions.userId, user.id));
+  } else {
+    // Create new subscription record
+    await db
+      .insert(userSubscriptions)
+      .values({
+        userId: user.id,
+        plan,
+        searchesLimit,
+        searchesUsed: 0,
+        status: 'active',
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      });
+  }
 
   console.log('✅ Subscription updated:', {
     userId: user.id,
